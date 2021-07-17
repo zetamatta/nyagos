@@ -6,12 +6,14 @@ ifeq ($(OS),Windows_NT)
     SET=set
     D=\\
     TYPE=type
+    AWK="$(GIT_INSTALL_ROOT)\usr\bin\gawk.exe"
 else
     NUL=/dev/null
     D=/
     SET=export
     DELTREE=rm -r
     TYPE=cat
+    AWK=gawk
 endif
 
 snapshot: fmt
@@ -44,13 +46,7 @@ clean:
 	$(DELTREE) bin 2>$(NUL)
 
 fmt:
-ifeq ($(OS),Windows_NT)
-	- for /F "tokens=2" %%I in ('git status -s ^| more.com ^| findstr /R ".M.*\.go$$" ') do \
-	     go fmt "%%I"
-
-else
-	git status -s | gawk '/^.M.*\.go/{ system("go fmt " $$2) }'
-endif
+	git status -s | $(AWK) "/^.M.*\.go/{ system(\"go fmt \" $$2) }"
 
 syso:
 	pushd Etc && go generate & popd
